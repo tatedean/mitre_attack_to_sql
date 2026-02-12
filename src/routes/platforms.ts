@@ -3,6 +3,30 @@ import db from "../db/db.js";
 
 const routerPlatforms = Router();
 
+routerPlatforms.get("/", (req, res) => {
+  const { matrix = "ics-attack", version = "18.1" } = req.query;
+
+  const sql = `
+        SELECT platform_name FROM technique_platforms
+        UNION
+        SELECT platform_name FROM malware_platforms
+        ORDER BY platform_name ASC
+    `;
+
+  try {
+    const rows = db.prepare(sql).all() as { platform_name: string }[];
+    const platforms = rows.map(row => row.platform_name);
+
+    if (!platforms) {
+      return res.status(404).json({ error: "Platform not found" });
+    }
+
+    res.json(platforms);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 routerPlatforms.get("/:platform_name", (req, res) => {
   const { platform_name } = req.params; // e.g., S0604 (Industroyer)
   const { matrix = "ics-attack", version = "18.1" } = req.query;
@@ -35,7 +59,7 @@ routerPlatforms.get("/:platform_name", (req, res) => {
   `;
 
   try {
-    const result = db.prepare(sql).all({matrix, platform_name});
+    const result = db.prepare(sql).all({ matrix, platform_name });
 
     if (!result) {
       return res.status(404).json({ error: "Platform not found" });
