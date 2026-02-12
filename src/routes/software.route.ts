@@ -3,12 +3,17 @@ import db from "../db/db.js";
 
 const routerSoftware = Router();
 
-
 routerSoftware.get("/:id", (req, res) => {
-  const { id } = req.params; // e.g., S0604 (Industroyer)
-  const { matrix = "ics-attack", version = "18.1" } = req.query;
+  const { id } = req.params;
+  const matrix = req.query.matrix || "enterprise-attack";
+  const targetVersion = req.query.version || null; // Pass null if empty
 
   const sql = `
+    WITH target_version AS (
+      SELECT COALESCE(:targetVersion, MAX(version)) as val 
+      FROM malware 
+      WHERE matrix_type = :matrix
+    )
     SELECT 
       s.*,
       -- 1. Software Aliases
@@ -55,23 +60,31 @@ routerSoftware.get("/:id", (req, res) => {
             'desc', IFNULL(r.description, '')
           )
         )
-       FROM relationships r 
+       FROM relationships r
        JOIN intrusion_set i ON r.source_ref = i.stix_id AND r.version = i.version
        WHERE r.target_ref = s.stix_id 
        AND r.relationship_type = 'uses' 
-       AND r.version = s.version) as intrusion_set
+       AND r.version = s.version) as intrusion_sets
 
-    FROM malware s
-    WHERE s.external_id = ? 
-      AND s.matrix_type = ? 
-      AND s.version = ?
+      FROM malware s
+      CROSS JOIN target_version
+      WHERE s.external_id = :id
+        AND s.matrix_type = :matrix
+        AND s.version = target_version.val
   `;
 
   try {
-    const row = db.prepare(sql).get(id, matrix, version) as any;
+    const row = db.prepare(sql).get({ id, matrix, targetVersion }) as any;
 
     if (!row) {
-      return res.status(404).json({ error: "Software not found" });
+      return res
+        .status(404)
+        .json({
+          error: "Software not found",
+          matrix_type: matrix,
+          input_version: targetVersion,
+          software_id: id,
+        });
     }
 
     // Use a helper or inline parse to hydrate the strings
@@ -81,7 +94,7 @@ routerSoftware.get("/:id", (req, res) => {
       platforms: JSON.parse(row.platforms || "[]"),
       techniques: JSON.parse(row.techniques || "[]"),
       campaigns: JSON.parse(row.campaigns || "[]"),
-      intrusion_set: JSON.parse(row.intrusion_set || "[]"),
+      intrusion_sets: JSON.parse(row.intrusion_sets || "[]"),
       revoked: !!row.revoked,
       x_mitre_deprecated: !!row.x_mitre_deprecated,
     };

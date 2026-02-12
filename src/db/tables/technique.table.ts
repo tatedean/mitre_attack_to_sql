@@ -15,6 +15,7 @@ export const techniqueTable = () => {
             PRIMARY KEY (stix_id, version, matrix_type)
         );
         CREATE INDEX IF NOT EXISTS idx_techniques_external ON techniques (external_id);
+        CREATE INDEX IF NOT EXISTS idx_techniques_version_matrix ON techniques (matrix_type, version);
         `);
 
   db.exec(`

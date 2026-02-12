@@ -65,32 +65,45 @@ routerAttack.get("/", (req, res) => {
 });
 
 routerAttack.get("/:id/mitigations", (req, res) => {
-  const { id } = req.params; // e.g., T1059
-  const { matrix, version } = req.query;
+  const { id } = req.params;
+  const matrix = req.query.matrix || "enterprise-attack";
+  const targetVersion = req.query.version || null; // Pass null if empty
 
   const sql = `
+    WITH target_version AS (
+      SELECT COALESCE(:targetVersion, MAX(version)) as val 
+      FROM techniques 
+      WHERE matrix_type = :matrix
+    )
     SELECT 
-      -- m.stix_id as mitigation_stix_id,
       m.external_id as mitigation_id,
       m.name as name,
       m.description as description,
-      r.description as details
+      r.description as details,
+      m.version as version
     FROM techniques t
     JOIN relationships r ON t.stix_id = r.target_ref
+      AND r.version = t.version
     JOIN mitigations m ON r.source_ref = m.stix_id
-    WHERE t.external_id = ? 
+      AND m.version = r.version
+    CROSS JOIN target_version
+    WHERE t.external_id = :id
       AND r.relationship_type = 'mitigates'
-      AND t.matrix_type = ? 
-      AND t.version = ?
-      AND m.matrix_type = t.matrix_type -- Ensure we stay in the same matrix
+      AND t.matrix_type = :matrix
+      AND t.version = target_version.val
+      AND m.matrix_type = t.matrix_type 
       AND m.version = t.version
   `;
 
   try {
-    const results = db
-      .prepare(sql)
-      .all(id, matrix || "ics-attack", version || "18.1");
-    res.json(results);
+    // Parameter order: 1. version, 2. matrix, 3. id, 4. matrix
+    const results = db.prepare(sql).all({ targetVersion, matrix, id });
+    res.json({
+      technique_id: id,
+      mitigations: results,
+      matrix_type: matrix,
+      input_version: targetVersion,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
