@@ -4,7 +4,7 @@ import { Technique } from "../types/db.types.js";
 
 const routerAttack = Router();
 
-routerAttack.get("/techniques/:id", (req, res) => {
+routerAttack.get("/:id", (req, res) => {
   const stmt = db.prepare("SELECT * FROM techniques WHERE external_id = ?");
 
   // Cast the result to your Interface for autocomplete/safety
@@ -17,22 +17,7 @@ routerAttack.get("/techniques/:id", (req, res) => {
   res.json(technique);
 });
 
-routerAttack.get("/platforms/:platform_id", (req, res) => {
-  const platform_id = req.params.platform_id as string;
-  //   const cleaned = stringUtils.toTitleCase(platform_id)
-
-  const query = `
-    SELECT t.name, t.external_id 
-    FROM techniques t
-    JOIN technique_platforms p ON t.stix_id = p.technique_id
-    WHERE p.platform_name = '${platform_id}'
-  `;
-
-  const results = db.prepare(query).all();
-  res.json(results);
-});
-
-routerAttack.get("/techniques", (req, res) => {
+routerAttack.get("/", (req, res) => {
   const { matrix, version } = req.query;
 
   // 1. Basic validation
@@ -79,7 +64,7 @@ routerAttack.get("/techniques", (req, res) => {
   }
 });
 
-routerAttack.get("/techniques/:id/mitigations", (req, res) => {
+routerAttack.get("/:id/mitigations", (req, res) => {
   const { id } = req.params; // e.g., T1059
   const { matrix, version } = req.query;
 
