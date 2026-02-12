@@ -2,6 +2,7 @@ import { StatementsA } from "../db.seed.js";
 import { process_attack_pattern } from "./attack_pattern.js";
 import { process_campaigns } from "./campaigns.js";
 import { process_intrusion_set } from "./intrusion_set.js";
+import { process_malware_table } from "./malware_type.js";
 
 export const handleItem = (
   item: any,

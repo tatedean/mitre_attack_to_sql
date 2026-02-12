@@ -74,7 +74,21 @@ const sql = `
        JOIN intrusion_set m ON r.target_ref = m.stix_id AND r.version = m.version
        WHERE r.source_ref = c.stix_id 
        AND r.relationship_type = 'attributed-to' 
-       AND r.version = c.version) as attribution
+       AND r.version = c.version) as attribution,
+
+       -- Get Malware/Tool Data (Mapping STIX ID to Actor External ID)
+      (SELECT JSON_GROUP_ARRAY(
+          JSON_OBJECT(
+            'id', m.external_id, 
+            'name', m.name,
+            'desc', IFNULL(r.description, '')
+          )
+        )
+       FROM relationships r 
+       JOIN malware m ON r.target_ref = m.stix_id AND r.version = m.version
+       WHERE r.source_ref = c.stix_id 
+       AND r.relationship_type = 'uses' 
+       AND r.version = c.version) as software
 
     FROM campaigns c
     WHERE c.external_id = ? 
@@ -89,36 +103,16 @@ const sql = `
       return res.status(404).json({ error: "Campaign not found" });
     }
 
-    // const parseRelData = (dataStr: string) => {
-    //   if (!dataStr) return [];
-    //   return dataStr.split("|-|").map((pair) => {
-    //     const [id, ...descParts] = pair.split("::");
-    //     return {
-    //       id,
-    //       relationship_description: descParts.join("::"), // Handles cases where desc might contain ::
-    //     };
-    //   });
-    // };
-
     // "Hydrating" the comma-separated strings back into clean arrays
     const response = {
       ...row,
       aliases: JSON.parse(row.aliases || []),
       techniques: JSON.parse(row.techniques || []),
       attribution: JSON.parse(row.attribution || []),
-      // technique_refs: row.technique_refs ? row.technique_refs.split(",") : [],
-      // techniques: parseRelData(row.technique_data),
-      // attribution: parseRelData(row.attribution_data),
-      // attribution_refs: row.attribution_refs
-      //   ? row.attribution_refs.split(",")
-      //   : [],
-      // Convert SQLite 0/1 to Boolean
+      software: JSON.parse(row.software || []),
       revoked: !!row.revoked,
       x_mitre_deprecated: !!row.x_mitre_deprecated,
     };
-
-    // delete response.attribution_data;
-    // delete response.technique_data;
 
     res.json(response);
   } catch (err) {
