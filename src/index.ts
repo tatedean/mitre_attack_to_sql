@@ -4,6 +4,7 @@ import { seedDatabase } from "./db/db.seed.js";
 import routerCampaigns from "./routes/campaigns.js";
 import routerSoftware from "./routes/software.route.js";
 import routerPlatforms from "./routes/platforms.js";
+import routerGroups from "./routes/groups.routes.js";
 
 const app = express();
 const PORT = 3000;
@@ -32,6 +33,7 @@ app.use("/techniques", routerAttack);
 app.use("/campaigns", routerCampaigns);
 app.use("/software", routerSoftware);
 app.use("/platforms", routerPlatforms);
+app.use("/groups", routerGroups);
 
 app.listen(PORT, () => {
   console.log(`⚡️[server]: Server is running at http://localhost:${PORT}`);
