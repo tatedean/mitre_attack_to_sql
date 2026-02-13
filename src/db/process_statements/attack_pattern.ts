@@ -7,7 +7,7 @@ export const process_attack_pattern = (
   stmt: StatementsA,
   externalId: string,
 ) => {
-  // stix_id, external_id, name, is_subtechnique, description, matrix_type, version, revoked, x_mitre_deprecated
+  // stix_id, external_id, name, is_subtechnique, description, matrix_type, version
   stmt["attack-pattern"].technique.run(
     item.id,
     externalId,
@@ -16,8 +16,6 @@ export const process_attack_pattern = (
     item.description,
     matrix,
     version,
-    item.revoked ? 1 : 0,
-    item.x_mitre_deprecated ? 1 : 0,
   );
 
   if (item.kill_chain_phases) {

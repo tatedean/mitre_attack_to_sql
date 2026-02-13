@@ -8,12 +8,11 @@ export const techniqueTable = () => {
             matrix_type TEXT,
             external_id TEXT,
             is_subtechnique INTEGER,
-            x_mitre_deprecated INTEGER,
-            revoked INTEGER,
             name TEXT,
             description TEXT,
             PRIMARY KEY (stix_id, version, matrix_type)
         );
+        CREATE INDEX idx_tech_lookup ON techniques (stix_id, version, matrix_type);
         CREATE INDEX IF NOT EXISTS idx_techniques_external ON techniques (external_id);
         CREATE INDEX IF NOT EXISTS idx_techniques_version_matrix ON techniques (matrix_type, version);
         `);

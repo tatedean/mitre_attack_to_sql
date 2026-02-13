@@ -9,10 +9,9 @@ export const intrusion_setTable = () => {
       external_id TEXT,
       name TEXT,
       description TEXT,
-      revoked INTEGER,
-      x_mitre_deprecated INTEGER,
       PRIMARY KEY (stix_id, version, matrix_type)
-      );`);
+      );
+      CREATE INDEX idx_intrusion_lookup ON intrusion_set (stix_id, version, matrix_type);`);
 
   db.exec(`
       CREATE TABLE IF NOT EXISTS intrusion_set_aliases (

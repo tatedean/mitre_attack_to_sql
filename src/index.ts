@@ -14,7 +14,19 @@ app.get("/", (req: Request, res: Response) => {
   res.send("TypeScript Express Server is running!");
 });
 
-seedDatabase();
+// seedDatabase({
+//   filepath: "./src/import/ics-attack.json",
+//   version: "18.1",
+//   matrix: "ics-attack",
+//   clearTables: true
+// });
+
+// seedDatabase({
+//   filepath: "./src/import/enterprise-attack.json",
+//   version: "18.1",
+//   matrix: "enterprise-attack",
+//   // clearTables: true
+// });
 
 app.use("/techniques", routerAttack);
 app.use("/campaigns", routerCampaigns);

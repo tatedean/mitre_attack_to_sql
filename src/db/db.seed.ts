@@ -27,29 +27,37 @@ export type StatementsA = {
   };
 };
 
-export const seedDatabase = () => {
-  // createAttackTables();
-
-  const version = "18.1";
-  const matrix = "ics-attack"; // enterprise-attack, mobile-attack
-
-  const countRow = db
-    .prepare("SELECT COUNT(*) as count FROM techniques")
-    .get() as { count: number };
-
-  if (countRow.count > 0) {
-    console.log("Database already seeded");
-    return;
+export const seedDatabase = ({
+  filepath,
+  matrix,
+  version,
+  clearTables = false,
+}: {
+  filepath: string;
+  matrix: string;
+  version: string;
+  clearTables?: boolean;
+}) => {
+  if (clearTables) {
+    createAttackTables();
   }
+  // const countRow = db
+  //   .prepare("SELECT COUNT(*) as count FROM techniques")
+  //   .get() as { count: number };
 
-  const rawData = fs.readFileSync("./src/import/ics-attack.json", "utf-8");
+  // if (countRow.count > 0) {
+  //   console.log("Database already seeded");
+  //   return;
+  // }
+
+  const rawData = fs.readFileSync(filepath, "utf-8");
   const data = JSON.parse(rawData);
 
   const statements: StatementsA = {
     "attack-pattern": {
       technique: db.prepare(`
-        INSERT INTO techniques (stix_id, external_id, name, is_subtechnique, description, matrix_type, version, revoked, x_mitre_deprecated)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+        INSERT INTO techniques (stix_id, external_id, name, is_subtechnique, description, matrix_type, version)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`),
       platform: db.prepare(`
         INSERT INTO technique_platforms (stix_id, version, matrix_type, platform_name) VALUES (?, ?, ?, ?)`),
       phase: db.prepare(`
@@ -57,17 +65,17 @@ export const seedDatabase = () => {
         VALUES (?, ?, ?, ?)`),
     },
     "course-of-action": db.prepare(`
-        INSERT INTO mitigations (stix_id, external_id, version, matrix_type, name, description, revoked, x_mitre_deprecated) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`),
+        INSERT INTO mitigations (stix_id, external_id, version, matrix_type, name, description) 
+        VALUES (?, ?, ?, ?, ?, ?)`),
     relationships: db.prepare(`
-        INSERT INTO relationships (stix_id, source_ref, target_ref, relationship_type, description, version, matrix_type, revoked, x_mitre_deprecated) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+        INSERT INTO relationships (stix_id, source_ref, target_ref, relationship_type, description, version, matrix_type) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)`),
     campaigns: {
       campaign: db.prepare(`
         INSERT INTO campaigns (
           stix_id, version, matrix_type, external_id, name, 
-          description, first_seen, last_seen, revoked, x_mitre_deprecated
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`),
+          description, first_seen, last_seen
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`),
       alias: db.prepare(`
         INSERT INTO campaign_aliases (stix_id, version, matrix_type, alias_name) VALUES (?, ?, ?, ?)`),
     },
@@ -75,8 +83,8 @@ export const seedDatabase = () => {
       intrusion_set: db.prepare(`
         INSERT INTO intrusion_set (
           stix_id, version, matrix_type, external_id, name, 
-          description, revoked, x_mitre_deprecated
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`),
+          description
+        ) VALUES (?, ?, ?, ?, ?, ?)`),
       alias: db.prepare(`
         INSERT INTO intrusion_set_aliases (stix_id, version, matrix_type, alias_name) VALUES (?, ?, ?, ?)`),
     },
@@ -84,8 +92,8 @@ export const seedDatabase = () => {
       malware: db.prepare(`
         INSERT INTO malware (
           stix_id, version, matrix_type, external_id, name, 
-          description, revoked, x_mitre_deprecated
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`),
+          description
+        ) VALUES (?, ?, ?, ?, ?, ?)`),
       alias: db.prepare(`
         INSERT INTO malware_aliases (stix_id, version, matrix_type, alias_name) VALUES (?, ?, ?, ?)`),
       platform: db.prepare(`

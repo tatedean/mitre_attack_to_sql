@@ -10,6 +10,7 @@ export const handleItem = (
   version: string,
   matrix: string,
 ) => {
+  if (item?.revoked || item?.x_mitre_deprecated) return; // ignore revoked or deprecated data
   const externalId = item.external_references?.[0]?.external_id || "N/A";
 
   switch (item.type) {
@@ -21,7 +22,7 @@ export const handleItem = (
       process_campaigns(item, version, matrix, stmt, externalId);
       break;
 
-     case "intrusion-set":
+    case "intrusion-set":
       process_intrusion_set(item, version, matrix, stmt, externalId);
       break;
 
@@ -38,8 +39,6 @@ export const handleItem = (
         item?.description || "",
         version,
         matrix,
-        item.revoked ? 1 : 0,
-        item.x_mitre_deprecated ? 1 : 0,
       );
       break;
 
@@ -51,8 +50,6 @@ export const handleItem = (
         matrix,
         item.name,
         item.description,
-        item?.revoked ? 1 : 0,
-        item?.x_mitre_deprecated ? 1 : 0,
       );
       break;
 

@@ -14,8 +14,6 @@ export const process_intrusion_set = (
     externalId,
     item.name,
     item.description || "",
-    item.revoked ? 1 : 0,
-    item.x_mitre_deprecated ? 1 : 0,
   );
 
   if (item.aliases) {

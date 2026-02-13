@@ -9,9 +9,8 @@ export const relationshipsTable = () => {
         target_ref TEXT,
         relationship_type TEXT,
         matrix_type TEXT,
-        x_mitre_deprecated INTEGER,
-        revoked INTEGER,
         description TEXT,
         PRIMARY KEY (stix_id, version, matrix_type)
-        );`);
+        );
+        CREATE INDEX idx_rel_lookup ON relationships (source_ref, target_ref, version, matrix_type);`);
 };

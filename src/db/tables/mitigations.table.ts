@@ -8,8 +8,6 @@ export const mitigationsTable = () => {
         external_id TEXT,
         matrix_type TEXT,
         name TEXT,
-        x_mitre_deprecated INTEGER,
-        revoked INTEGER,
         description TEXT,
         PRIMARY KEY (stix_id, version, matrix_type)
         );`);

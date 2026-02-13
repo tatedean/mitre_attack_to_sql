@@ -11,10 +11,9 @@ export const campaignsTable = () => {
       description TEXT,
       first_seen TEXT,
       last_seen TEXT,
-      revoked INTEGER,
-      x_mitre_deprecated INTEGER,
       PRIMARY KEY (stix_id, version, matrix_type)
-      );`);
+      );
+      CREATE INDEX idx_campaign_lookup ON campaigns (stix_id, version, matrix_type);`);
 
   db.exec(`
       CREATE TABLE IF NOT EXISTS campaign_aliases (

@@ -16,8 +16,6 @@ export const process_campaigns = (
     item.description || "",
     item.first_seen || null, // SQLite handles ISO date strings as TEXT perfectly
     item.last_seen || null,
-    item.revoked ? 1 : 0,
-    item.x_mitre_deprecated ? 1 : 0,
   );
 
   if (item.aliases) {
