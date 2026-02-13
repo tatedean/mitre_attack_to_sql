@@ -24,5 +24,6 @@ export const campaignsTable = () => {
       PRIMARY KEY (stix_id, version, matrix_type, alias_name),
       FOREIGN KEY (stix_id, version, matrix_type) 
             REFERENCES campaigns (stix_id, version, matrix_type) ON DELETE CASCADE
-      );`);
+      );
+    CREATE INDEX idx_campaign_alias_lookup ON campaign_aliases (stix_id, version, matrix_type);`);
 };

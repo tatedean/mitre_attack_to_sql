@@ -14,7 +14,6 @@ export const techniqueTable = () => {
         );
         CREATE INDEX idx_tech_lookup ON techniques (stix_id, version, matrix_type);
         CREATE INDEX IF NOT EXISTS idx_techniques_external ON techniques (external_id);
-        CREATE INDEX IF NOT EXISTS idx_techniques_version_matrix ON techniques (matrix_type, version);
         `);
 
   db.exec(`
@@ -27,7 +26,7 @@ export const techniqueTable = () => {
         FOREIGN KEY (stix_id, version, matrix_type) 
             REFERENCES techniques (stix_id, version, matrix_type) ON DELETE CASCADE
     );
-    CREATE INDEX IF NOT EXISTS idx_platforms_name ON technique_platforms (platform_name);`);
+    CREATE INDEX idx_tech_platforms_lookup ON technique_platforms (stix_id, version, matrix_type);`);
 
   db.exec(`
         CREATE TABLE IF NOT EXISTS technique_phases (
@@ -38,6 +37,5 @@ export const techniqueTable = () => {
         PRIMARY KEY (stix_id, version, matrix_type, phase_name),
         FOREIGN KEY (stix_id, version, matrix_type) REFERENCES techniques (stix_id, version, matrix_type) ON DELETE CASCADE
         );
-        CREATE INDEX IF NOT EXISTS idx_phases_name ON technique_phases (phase_name);
-        `);
+        CREATE INDEX idx_tech_phases_lookup ON technique_phases (stix_id, version, matrix_type);`);
 };

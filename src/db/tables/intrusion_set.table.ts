@@ -22,5 +22,6 @@ export const intrusion_setTable = () => {
       PRIMARY KEY (stix_id, version, matrix_type, alias_name),
       FOREIGN KEY (stix_id, version, matrix_type) 
             REFERENCES intrusion_set (stix_id, version, matrix_type) ON DELETE CASCADE
-      );`);
+      );
+      CREATE INDEX idx_intru_alias_lookup ON intrusion_set_aliases (stix_id, version, matrix_type);`);
 };
