@@ -12,7 +12,6 @@ export const techniqueTable = () => {
             description TEXT,
             PRIMARY KEY (stix_id, version, matrix_type)
         );
-        CREATE INDEX idx_tech_lookup ON techniques (stix_id, version, matrix_type);
         CREATE INDEX IF NOT EXISTS idx_techniques_external ON techniques (external_id);
         `);
 

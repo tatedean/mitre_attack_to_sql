@@ -8,15 +8,15 @@ export const process_attack_pattern = (
   externalId: string,
 ) => {
   // stix_id, external_id, name, is_subtechnique, description, matrix_type, version
-  stmt["attack-pattern"].technique.run(
-    item.id,
-    externalId,
-    item.name,
-    item.is_subtechnique ? 1 : 0,
-    item.description,
-    matrix,
-    version,
-  );
+  stmt["attack-pattern"].technique.run({
+    ":stix_id": item.id,
+    ":external_id": externalId,
+    ":name": item.name,
+    ":is_subtechnique": item.x_mitre_is_subtechnique ? 1 : 0,
+    ":description": item.description,
+    ":matrix_type": matrix,
+    ":version": version,
+  });
 
   if (item.kill_chain_phases) {
     for (const phase of item.kill_chain_phases) {

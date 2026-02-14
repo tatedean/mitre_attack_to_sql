@@ -3,6 +3,7 @@ import { process_attack_pattern } from "./attack_pattern.js";
 import { process_campaigns } from "./campaigns.js";
 import { process_intrusion_set } from "./intrusion_set.js";
 import { process_malware_table } from "./malware_type.js";
+import { process_tactics_order } from "./tactics.process.js";
 
 export const handleItem = (
   item: any,
@@ -14,6 +15,9 @@ export const handleItem = (
   const externalId = item.external_references?.[0]?.external_id || "N/A";
 
   switch (item.type) {
+    case "x-mitre-matrix":
+      process_tactics_order(item, version, matrix, stmt);
+      break;
     case "attack-pattern":
       process_attack_pattern(item, version, matrix, stmt, externalId);
       break;
@@ -39,6 +43,17 @@ export const handleItem = (
         item?.description || "",
         version,
         matrix,
+      );
+      break;
+
+    case "x-mitre-tactic":
+      stmt["x-mitre-tactic"].run(
+        item.id,
+        externalId,
+        version,
+        matrix,
+        item.name,
+        item.description,
       );
       break;
 

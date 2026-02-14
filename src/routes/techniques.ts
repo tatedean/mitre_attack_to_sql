@@ -22,7 +22,67 @@ routerAttack.get("/:id", (req, res) => {
           WHERE pl.stix_id = t.stix_id AND pl.version = t.version AND pl.matrix_type = :matrix) as platforms,
 
           (SELECT JSON_GROUP_ARRAY(phase_name) FROM technique_phases pa 
-          WHERE pa.stix_id = t.stix_id AND pa.version = t.version AND pa.matrix_type = :matrix) as phases
+          WHERE pa.stix_id = t.stix_id AND pa.version = t.version AND pa.matrix_type = :matrix) as phases,
+
+          -- 1. Groups ==
+          (SELECT JSON_GROUP_ARRAY(
+              JSON_OBJECT(
+                'id', i.external_id, 
+                'name', i.name,
+                'desc', IFNULL(r.description, '')
+              )
+            )
+          FROM relationships r 
+          JOIN intrusion_set i ON r.source_ref = i.stix_id AND r.version = i.version AND r.matrix_type = :matrix
+          WHERE r.target_ref = t.stix_id 
+          AND r.relationship_type = 'uses' 
+          AND r.version = t.version
+          AND i.matrix_type = :matrix) as intrusion_sets,
+
+          -- 2. Software (Scoped to this matrix)
+          (SELECT JSON_GROUP_ARRAY(
+              JSON_OBJECT(
+                'id', m.external_id, 
+                'name', m.name,
+                'desc', IFNULL(r.description, '')
+              )
+            )
+          FROM relationships r
+          JOIN malware m ON r.source_ref = m.stix_id AND r.version = m.version AND r.matrix_type = :matrix
+          WHERE r.target_ref = t.stix_id 
+          AND r.relationship_type = 'uses' 
+          AND r.version = t.version
+          AND m.matrix_type = :matrix) as software,
+          
+          -- 3. Campaign (Campaign -> attributed-to -> Intrusion Set)
+          (SELECT JSON_GROUP_ARRAY(
+              JSON_OBJECT(
+                'id', c.external_id, 
+                'name', c.name,
+                'desc', IFNULL(r.description, '')
+              )
+            )
+          FROM relationships r 
+          JOIN campaigns c ON r.source_ref = c.stix_id AND r.version = c.version AND r.matrix_type = :matrix
+          WHERE r.target_ref = t.stix_id 
+          AND r.relationship_type = 'uses' 
+          AND r.version = t.version
+          AND c.matrix_type = :matrix) as campaigns,
+
+          -- 3. Mitigations
+          (SELECT JSON_GROUP_ARRAY(
+              JSON_OBJECT(
+                'id', m.external_id, 
+                'name', m.name,
+                'desc', IFNULL(r.description, '')
+              )
+            )
+          FROM relationships r 
+          JOIN mitigations m ON r.source_ref = m.stix_id AND r.version = m.version AND r.matrix_type = :matrix
+          WHERE r.target_ref = t.stix_id 
+          AND r.relationship_type = 'mitigates' 
+          AND r.version = t.version
+          AND m.matrix_type = :matrix) as mitigations
 
       FROM techniques t
       CROSS JOIN target_version
@@ -44,6 +104,10 @@ routerAttack.get("/:id", (req, res) => {
       ...technique,
       platforms: JSON.parse(technique.platforms || []),
       phases: JSON.parse(technique.phases || []),
+      software: JSON.parse(technique.software || []),
+      campaigns: JSON.parse(technique.campaigns || []),
+      mitigations: JSON.parse(technique.mitigations || []),
+      intrusion_sets: JSON.parse(technique.intrusion_sets || []),
     });
   } catch (err) {
     // This catches SQL syntax errors or DB crashes
@@ -80,63 +144,6 @@ routerAttack.get("/", (req, res) => {
     res.json(results);
   } catch (err) {
     res.status(500).json({ error: err.message });
-  }
-});
-
-routerAttack.get("/:id/mitigations", (req, res) => {
-  const { id } = req.params;
-  const matrix = req.query.matrix || "enterprise-attack";
-  const targetVersion = req.query.version || null;
-
-  const sql = `
-    WITH target_version AS (
-      SELECT COALESCE(:targetVersion, MAX(version)) as val 
-      FROM techniques 
-      WHERE matrix_type = :matrix
-    )
-    SELECT DISTINCT
-      m.external_id as mitigation_id,
-      m.name as name,
-      m.description as description,
-      r.description as details,
-      m.version as version
-    FROM techniques t
-    CROSS JOIN target_version
-    JOIN relationships r ON t.stix_id = r.target_ref
-      AND r.version = t.version
-      -- Prevent matrix clashing by ensuring relationship belongs to this matrix
-      AND r.matrix_type = t.matrix_type 
-    JOIN mitigations m ON r.source_ref = m.stix_id
-      AND m.version = r.version
-      AND m.matrix_type = r.matrix_type
-    WHERE t.external_id = :id
-      AND r.relationship_type = 'mitigates'
-      AND t.matrix_type = :matrix
-      AND t.version = target_version.val
-  `;
-
-  try {
-    const results = db.prepare(sql).all({ targetVersion, matrix, id });
-
-    // Handle No Results (Throwing a 404 error)
-    if (!results || results.length === 0) {
-      return res.status(404).json({
-        error: "No mitigations found",
-        details: `Technique ${id} either does not exist in ${matrix} or has no mitigations for version ${targetVersion || "latest"}`,
-      });
-    }
-
-    res.json({
-      technique_id: id,
-      matrix_type: matrix,
-      version: results[0].version, // Return the version actually found
-      mitigations: results,
-    });
-  } catch (err) {
-    // This catches SQL syntax errors or DB crashes
-    res
-      .status(500)
-      .json({ error: "Database query failed", message: err.message });
   }
 });
 

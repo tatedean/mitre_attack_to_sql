@@ -12,5 +12,6 @@ export const relationshipsTable = () => {
         description TEXT,
         PRIMARY KEY (stix_id, version, matrix_type)
         );
-        CREATE INDEX idx_rel_lookup ON relationships (source_ref, target_ref, version, matrix_type);`);
+        CREATE INDEX idx_rel_source_lookup ON relationships (source_ref, version, relationship_type, matrix_type);
+        CREATE INDEX idx_rel_target_lookup ON relationships (target_ref, version, relationship_type, matrix_type);`);
 };

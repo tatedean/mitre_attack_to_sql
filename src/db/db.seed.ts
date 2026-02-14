@@ -5,6 +5,7 @@ import { StatementSync } from "node:sqlite";
 import { createAttackTables } from "./db.tables.js";
 
 export type StatementsA = {
+  "x-mitre-tactic": StatementSync;
   "attack-pattern": {
     technique: StatementSync;
     platform: StatementSync;
@@ -54,10 +55,17 @@ export const seedDatabase = ({
   const data = JSON.parse(rawData);
 
   const statements: StatementsA = {
+    "x-mitre-tactic": db.prepare(`
+      INSERT INTO tactics (stix_id, external_id, version, matrix_type, name, description, orderNum) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(stix_id, version, matrix_type) DO UPDATE SET
+          external_id = excluded.external_id,
+          name = excluded.name,
+          description = excluded.description`),
     "attack-pattern": {
       technique: db.prepare(`
         INSERT INTO techniques (stix_id, external_id, name, is_subtechnique, description, matrix_type, version)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`),
+        VALUES (:stix_id, :external_id, :name, :is_subtechnique, :description, :matrix_type, :version)`),
       platform: db.prepare(`
         INSERT INTO technique_platforms (stix_id, version, matrix_type, platform_name) VALUES (?, ?, ?, ?)`),
       phase: db.prepare(`
