@@ -10,6 +10,5 @@ export const mitigationsTable = () => {
         name TEXT,
         description TEXT,
         PRIMARY KEY (stix_id, version, matrix_type)
-        );
-        CREATE INDEX idx_mitigations_lookup ON mitigations (stix_id, version, matrix_type);`);
+        );`);
 };

@@ -26,6 +26,15 @@ export type StatementsA = {
     alias: StatementSync;
     platform: StatementSync;
   };
+  tool: {
+    tool: StatementSync;
+    alias: StatementSync;
+    platform: StatementSync;
+  };
+  detection_strategy: {
+    detection_strategy: StatementSync;
+    analytic: StatementSync;
+  };
 };
 
 export const seedDatabase = ({
@@ -42,14 +51,6 @@ export const seedDatabase = ({
   if (clearTables) {
     createAttackTables();
   }
-  // const countRow = db
-  //   .prepare("SELECT COUNT(*) as count FROM techniques")
-  //   .get() as { count: number };
-
-  // if (countRow.count > 0) {
-  //   console.log("Database already seeded");
-  //   return;
-  // }
 
   const rawData = fs.readFileSync(filepath, "utf-8");
   const data = JSON.parse(rawData);
@@ -106,6 +107,26 @@ export const seedDatabase = ({
         INSERT INTO malware_aliases (stix_id, version, matrix_type, alias_name) VALUES (?, ?, ?, ?)`),
       platform: db.prepare(`
         INSERT INTO malware_platforms (stix_id, version, matrix_type, platform_name) VALUES (?, ?, ?, ?)`),
+    },
+    tool: {
+      tool: db.prepare(`
+        INSERT INTO tool (
+          stix_id, version, matrix_type, external_id, name, description
+        ) VALUES (:stix_id, :version, :matrix_type, :external_id, :name, :description)`),
+      alias: db.prepare(`
+        INSERT INTO tool_aliases (stix_id, version, matrix_type, alias_name) VALUES (:stix_id, :version, :matrix_type, :alias_name)`),
+      platform: db.prepare(`
+        INSERT INTO tool_platforms (stix_id, version, matrix_type, platform_name) VALUES (:stix_id, :version, :matrix_type, :platform_name)`),
+    },
+    detection_strategy: {
+      detection_strategy: db.prepare(`
+        INSERT INTO detection_strategy (
+          stix_id, version, matrix_type, external_id, name
+        ) VALUES (:stix_id, :version, :matrix_type, :external_id, :name)`),
+      analytic: db.prepare(`
+        INSERT INTO detection_strategy_analytic (
+          stix_id, version, matrix_type, analytic_id
+        ) VALUES (:stix_id, :version, :matrix_type, :analytic_id)`),
     },
   };
 

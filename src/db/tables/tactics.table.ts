@@ -11,6 +11,5 @@ export const tacticsTable = () => {
         orderNum INTEGER,
         description TEXT,
         PRIMARY KEY (stix_id, version, matrix_type)
-        );
-        CREATE INDEX idx_tactics_lookup ON tactics (stix_id, version, matrix_type);`);
+        );`);
 };

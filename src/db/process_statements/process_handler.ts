@@ -1,9 +1,11 @@
 import { StatementsA } from "../db.seed.js";
 import { process_attack_pattern } from "./attack_pattern.js";
 import { process_campaigns } from "./campaigns.js";
+import { process_detection_strategy_table } from "./detectionStrategy.process.js";
 import { process_intrusion_set } from "./intrusion_set.js";
 import { process_malware_table } from "./malware_type.js";
 import { process_tactics_order } from "./tactics.process.js";
+import { process_tool_table } from "./tool.process.js";
 
 export const handleItem = (
   item: any,
@@ -34,6 +36,14 @@ export const handleItem = (
       process_malware_table(item, version, matrix, stmt, externalId);
       break;
 
+    case "tool":
+      process_tool_table(item, version, matrix, stmt, externalId);
+      break;
+
+    case "x-mitre-detection-strategy":
+      process_detection_strategy_table(item, version, matrix, stmt, externalId);
+      break;
+      
     case "relationship":
       stmt.relationships.run(
         item.id,

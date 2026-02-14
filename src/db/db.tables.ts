@@ -1,11 +1,13 @@
 import db from "./db.js";
 import { campaignsTable } from "./tables/campaigns.table.js";
+import { detectionStrategyTable } from "./tables/detection_strategy.table.js";
 import { intrusion_setTable } from "./tables/intrusion_set.table.js";
 import { malwareTable } from "./tables/malware.table.js";
 import { mitigationsTable } from "./tables/mitigations.table.js";
 import { relationshipsTable } from "./tables/relationships.table.js";
 import { tacticsTable } from "./tables/tactics.table.js";
 import { techniqueTable } from "./tables/technique.table.js";
+import { toolTable } from "./tables/tools.table.js";
 
 const clearTables = () => {
   db.exec(`
@@ -28,6 +30,13 @@ const clearTables = () => {
         DROP TABLE IF EXISTS malware;
         DROP TABLE IF EXISTS malware_aliases;
         DROP TABLE IF EXISTS malware_platforms;
+
+        DROP TABLE IF EXISTS tool;
+        DROP TABLE IF EXISTS tool_aliases;
+        DROP TABLE IF EXISTS tool_platforms;
+
+        DROP TABLE IF EXISTS detection_strategy;
+        DROP TABLE IF EXISTS detection_strategy_analytic;
         `);
 };
 
@@ -41,4 +50,6 @@ export const createAttackTables = () => {
   campaignsTable();
   intrusion_setTable();
   malwareTable();
+  toolTable();
+  detectionStrategyTable();
 };

@@ -53,8 +53,23 @@ routerAttack.get("/:id", (req, res) => {
           AND r.relationship_type = 'uses' 
           AND r.version = t.version
           AND m.matrix_type = :matrix) as software,
+
+          -- 3. Tools (Scoped to this matrix)
+          (SELECT JSON_GROUP_ARRAY(
+              JSON_OBJECT(
+                'id', m.external_id, 
+                'name', m.name,
+                'desc', IFNULL(r.description, '')
+              )
+            )
+          FROM relationships r
+          JOIN tool m ON r.source_ref = m.stix_id AND r.version = m.version AND r.matrix_type = :matrix
+          WHERE r.target_ref = t.stix_id 
+          AND r.relationship_type = 'uses' 
+          AND r.version = t.version
+          AND m.matrix_type = :matrix) as tools,
           
-          -- 3. Campaign (Campaign -> attributed-to -> Intrusion Set)
+          -- 4. Campaign (Campaign -> attributed-to -> Intrusion Set)
           (SELECT JSON_GROUP_ARRAY(
               JSON_OBJECT(
                 'id', c.external_id, 
@@ -69,7 +84,7 @@ routerAttack.get("/:id", (req, res) => {
           AND r.version = t.version
           AND c.matrix_type = :matrix) as campaigns,
 
-          -- 3. Mitigations
+          -- 5. Mitigations
           (SELECT JSON_GROUP_ARRAY(
               JSON_OBJECT(
                 'id', m.external_id, 
@@ -106,6 +121,7 @@ routerAttack.get("/:id", (req, res) => {
       phases: JSON.parse(technique.phases || []),
       software: JSON.parse(technique.software || []),
       campaigns: JSON.parse(technique.campaigns || []),
+      tools: JSON.parse(technique.tools || []),
       mitigations: JSON.parse(technique.mitigations || []),
       intrusion_sets: JSON.parse(technique.intrusion_sets || []),
     });

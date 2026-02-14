@@ -10,8 +10,7 @@ export const intrusion_setTable = () => {
       name TEXT,
       description TEXT,
       PRIMARY KEY (stix_id, version, matrix_type)
-      );
-      CREATE INDEX idx_intrusion_lookup ON intrusion_set (stix_id, version, matrix_type);`);
+      );`);
 
   db.exec(`
       CREATE TABLE IF NOT EXISTS intrusion_set_aliases (
